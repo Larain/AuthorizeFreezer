@@ -1,9 +1,8 @@
 ﻿using System;
-using System.Diagnostics.Tracing;
-using AuthorizeLocker.Entities;
+using AuthorizeLocker.DBLayer;
 using AuthorizeLocker.Interfaces;
 
-namespace AuthorizeLocker {
+namespace AuthorizeLocker.Authorizer.ServiceMenu {
     public class ServiceMenuAuthorizer : AuthorizerBase
     {
         protected override IUnlock Unlocker => DbManager.GetLastUnlocker();

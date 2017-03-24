@@ -40,18 +40,18 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AuthorizerBase.cs" />
-    <Compile Include="Entities\DBManager.cs" />
+    <Compile Include="Authorizer\AuthorizerBase.cs" />
+    <Compile Include="DBLayer\DBManager.cs" />
     <Compile Include="Entities\FailedAttempt.cs" />
     <Compile Include="Entities\User.cs" />
     <Compile Include="Interfaces\IAuthorizer.cs" />
     <Compile Include="Interfaces\ILock.cs" />
     <Compile Include="Interfaces\IUnlock.cs" />
-    <Compile Include="Entities\MemoryDataBase.cs" />
+    <Compile Include="DBLayer\MemoryDataBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ServiceMenuAuthorizer.cs" />
-    <Compile Include="ServiceMenuLocker.cs" />
-    <Compile Include="ServiceMenuUnlocker.cs" />
+    <Compile Include="Authorizer\ServiceMenu\ServiceMenuAuthorizer.cs" />
+    <Compile Include="Authorizer\ServiceMenu\ServiceMenuLocker.cs" />
+    <Compile Include="Authorizer\ServiceMenu\ServiceMenuUnlocker.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

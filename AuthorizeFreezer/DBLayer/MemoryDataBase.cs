@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
+using AuthorizeLocker.Entities;
 using AuthorizeLocker.Interfaces;
 
-namespace AuthorizeLocker.Entities
+namespace AuthorizeLocker.DBLayer
 {
     public class MemoryDataBase
     {

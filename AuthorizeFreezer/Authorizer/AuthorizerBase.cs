@@ -2,7 +2,7 @@
 using System.Timers;
 using AuthorizeLocker.Interfaces;
 
-namespace AuthorizeLocker {
+namespace AuthorizeLocker.Authorizer {
     public abstract class AuthorizerBase : IAuthorizer {
         private const int MAX_FAILURES_AMOUNT = 3;
 

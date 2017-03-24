@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Linq;
+using AuthorizeLocker.Authorizer.ServiceMenu;
+using AuthorizeLocker.Entities;
 using AuthorizeLocker.Interfaces;
 
-namespace AuthorizeLocker.Entities
+namespace AuthorizeLocker.DBLayer
 {
     public static class DbManager
     {

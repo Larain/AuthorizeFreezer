@@ -1,7 +1,6 @@
-﻿
-using System;
+﻿using System;
 
-namespace AuthorizeLocker
+namespace AuthorizeLocker.Entities
 {
     public class FailedAttempt
     {
