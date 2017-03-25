@@ -9,12 +9,12 @@ namespace AuthorizeLocker.Authorizer.ServiceMenu {
 
         protected override ILock Locker => DbManager.GetLastLocker(LookFrom);
 
-        public override void CreateLock(int number)
+        protected override void CreateLock(int number)
         {
             DbManager.AddLock(number);
         }
 
-        public override void CreateUnlock(int duration)
+        protected override void CreateUnlock(int duration)
         {
             DbManager.AddUnlcok(duration);
         }

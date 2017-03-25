@@ -2,10 +2,11 @@
 
 namespace AuthorizeLocker.Interfaces {
     public interface IAuthorizer {
+        event EventHandler LockStarted;
+        event EventHandler LockReleased;
+
         bool IsBlocked { get; }
         bool Login(Func<bool> action);
         DateTime BlockedTo { get; }
-        void CreateLock(int number);
-        void CreateUnlock(int duration);
     }
 }

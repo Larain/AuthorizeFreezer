@@ -18,7 +18,7 @@ namespace AuthorizeLocker.DBLayer
         public static ILock GetLastLocker(DateTime lookFromDate)
         {
             ILock result = null;
-            if (Db.UnlocksStorage.Any(l => l.TimeOccurred >= lookFromDate))
+            if (Db.LocksStorage.Any(l => l.TimeOccurred >= lookFromDate))
                 result = Db.LocksStorage.OrderByDescending(u => u.TimeOccurred).First();
             return result;
         }
@@ -42,6 +42,11 @@ namespace AuthorizeLocker.DBLayer
         public static void AddUnlcok(int duration)
         {
             Db.UnlocksStorage.Add(new ServiceMenuUnlocker(DateTime.Now, duration));
+        }
+
+        public static bool Login(string login, string password)
+        {
+            return Db.UsersStorage.Any(u => u.Login == login && u.Password == password);
         }
     }
 }

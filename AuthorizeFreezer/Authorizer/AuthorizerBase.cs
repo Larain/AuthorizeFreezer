@@ -9,7 +9,8 @@ namespace AuthorizeLocker.Authorizer {
         private Timer _timer;
         private bool _isBlocked;
 
-        public event EventHandler IsBlockedChanged;
+        public event EventHandler LockStarted;
+        public event EventHandler LockReleased;
 
         protected AuthorizerBase() {
             ProcessBolcking();
@@ -28,13 +29,13 @@ namespace AuthorizeLocker.Authorizer {
         /// </summary>
         /// <param name="number"></param>
         /// <returns>Lock sequence number</returns>
-        public abstract void CreateLock(int number);
+        protected abstract void CreateLock(int number);
 
         /// <summary>
         /// Create an unlock for authorization
         /// </summary>
         /// <param name="duration">Duration of unlock in minutes</param>
-        public abstract void CreateUnlock(int duration);
+        protected abstract void CreateUnlock(int duration);
 
         #endregion
         /// <summary>
@@ -99,14 +100,13 @@ namespace AuthorizeLocker.Authorizer {
                     return;
                 }
                 _isBlocked = value;
-                OnIsBlockedChanged();
             }
         }
 
         /// <summary>
         /// Timer for lock period
         /// </summary>
-        public Timer Timer {
+        private Timer Timer {
             get { return _timer ?? (_timer = new Timer()); }
             set { _timer = value; }
         }
@@ -145,17 +145,25 @@ namespace AuthorizeLocker.Authorizer {
                 else
                     CreateLock(1); // 1 - the first element of sequence
 
+                OnIsBlockedChanged();
+
                 var interval = (Locker.TimeLockedTo - DateTime.Now).TotalMilliseconds;
                 Timer = new Timer(interval) {AutoReset = true};
                 Timer.Start();
+                Timer.Elapsed += TimerOnElapsed;
 
                 return true;
             }
             return false;
         }
 
+        private void TimerOnElapsed(object sender, ElapsedEventArgs elapsedEventArgs)
+        {
+            LockReleased?.Invoke(this, EventArgs.Empty);
+        }
+
         private void OnIsBlockedChanged() {
-            IsBlockedChanged?.Invoke(this, EventArgs.Empty);
+            LockStarted?.Invoke(this, EventArgs.Empty);
         }
     }
 }

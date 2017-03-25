@@ -49,3 +49,5 @@ Temporary Items
 *.dll
 *.cache
 *.suo
+*/bin
+*/obj
