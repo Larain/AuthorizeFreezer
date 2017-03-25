@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client", "Client\Client.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClinetAuthorizer", "ClinetAuthorizer\ClinetAuthorizer.csproj", "{D73D92E6-4D86-4CDD-9B01-9E5EC681EA6C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuthorizeTests", "AuthorizeTests\AuthorizeTests.csproj", "{60582E0A-7773-4E82-AF5E-46E0E8FB95F3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{D73D92E6-4D86-4CDD-9B01-9E5EC681EA6C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D73D92E6-4D86-4CDD-9B01-9E5EC681EA6C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D73D92E6-4D86-4CDD-9B01-9E5EC681EA6C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{60582E0A-7773-4E82-AF5E-46E0E8FB95F3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{60582E0A-7773-4E82-AF5E-46E0E8FB95F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{60582E0A-7773-4E82-AF5E-46E0E8FB95F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{60582E0A-7773-4E82-AF5E-46E0E8FB95F3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

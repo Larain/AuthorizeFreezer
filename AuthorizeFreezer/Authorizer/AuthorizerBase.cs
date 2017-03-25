@@ -7,20 +7,39 @@ namespace AuthorizeLocker.Authorizer {
         private const int MAX_FAILURES_AMOUNT = 3;
 
         private Timer _timer;
-        private bool _isBlocked;
 
         protected AuthorizerBase() {
             ProcessBolcking();
         }
 
+        /// <summary>
+        /// Invokes when authorizer lock authorization
+        /// </summary>
         public event EventHandler LockStarted;
+        /// <summary>
+        /// Invokes when lock is released
+        /// </summary>
         public event EventHandler LockReleased;
 
         #region Abstract Methods
 
+        /// <summary>
+        /// Return failed authorize attempts
+        /// </summary>
+        /// <param name="lookFrom">Date point from which to look for attempts</param>
+        /// <returns></returns>
         protected abstract int GetFailedAttempts(DateTime lookFrom);
+        /// <summary>
+        /// Get last event of unlock
+        /// </summary>
         protected abstract IUnlock Unlocker { get; }
+        /// <summary>
+        /// Get last event of lock
+        /// </summary>
         protected abstract ILock Locker { get; }
+        /// <summary>
+        /// Save failed authorize attempt
+        /// </summary>
         protected abstract void SaveAttempt();
 
         /// <summary>
@@ -54,26 +73,32 @@ namespace AuthorizeLocker.Authorizer {
         {
             get
             {
-                if (Unlocker != null)
+                var cashedUnlocker = Unlocker;
+
+                if (cashedUnlocker != null)
                 {
-                    if (Unlocker.IsActice)
-                        return GetFailedAttempts(Unlocker.TimeOccurred);
+                    if (cashedUnlocker.IsActive)
+                        return GetFailedAttempts(cashedUnlocker.TimeOccurred);
                 }
 
-                if (Locker != null)
+                var cashedLocker = Locker;
+
+                if (cashedLocker != null)
                 {
-                    if (Locker.IsActive)
-                        return GetFailedAttempts(Locker.TimeOccurred);
+                    if (cashedLocker.IsActive)
+                        return GetFailedAttempts(cashedLocker.TimeOccurred);
                 }
 
-                if (Locker != null && Unlocker != null)
+                // If there are non-active lock and unlock event
+                // we have to choose which of them is more fresh
+                if (cashedLocker != null && cashedUnlocker != null)
                 {
-                    GetFailedAttempts(Locker.TimeOccurred >= Unlocker.TimeOccurred
-                        ? Locker.TimeOccurred
-                        : Unlocker.TimeOccurred);
+                    GetFailedAttempts(cashedLocker.TimeOccurred >= cashedUnlocker.TimeOccurred
+                        ? cashedLocker.TimeOccurred
+                        : cashedUnlocker.TimeOccurred);
                 }
 
-                return GetFailedAttempts(Locker?.TimeOccurred ?? LookFrom);
+                return GetFailedAttempts(cashedLocker?.TimeOccurred ?? LookFrom);
             }
         }
 
@@ -84,7 +109,7 @@ namespace AuthorizeLocker.Authorizer {
             get {
                 var ublocker = Unlocker;
                 if (ublocker != null)
-                    if (ublocker.IsActice)
+                    if (ublocker.IsActive)
                         return false;
 
                 var locker = Locker;
@@ -93,12 +118,6 @@ namespace AuthorizeLocker.Authorizer {
                         return true;
 
                 return false;
-            }
-            set {
-                if (_isBlocked == value) {
-                    return;
-                }
-                _isBlocked = value;
             }
         }
 
@@ -129,7 +148,7 @@ namespace AuthorizeLocker.Authorizer {
 
             var unlocker = Unlocker;
             if (unlocker != null)
-                if (unlocker.IsActice)
+                if (unlocker.IsActive)
                     return false;
             SaveAttempt();
             ProcessBolcking();
