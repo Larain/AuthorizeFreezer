@@ -2,7 +2,7 @@
 using AuthorizeLocker.Interfaces;
 
 namespace AuthorizeLocker.Authorizer.ServiceMenu {
-    public class ServiceMenuUnlocker : IUnlock, IAuthorizeEvent
+    public class ServiceMenuUnlocker : IUnlock
     {
         public ServiceMenuUnlocker(DateTime timeOccurred, int duration = 0) {
             TimeOccurred = timeOccurred;

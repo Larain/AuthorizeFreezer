@@ -13,6 +13,7 @@ namespace AuthorizeTests
         {
             DbManager.Reset();
         }
+
         [Test]
         public void Test3AttemptsIsBlocked()
         {
@@ -94,6 +95,46 @@ namespace AuthorizeTests
             sma.Login(successfulLoginAttempt);
 
             Assert.False(sma.IsBlocked);
+        }
+
+        [Test]
+        public void Test5MinsLock()
+        {
+            DbManager.AddLock(2);
+
+            var sma = new ServiceMenuAuthorizer();
+
+            Assert.True(sma.BlockedTo > DateTime.Now.AddMinutes(4) && sma.BlockedTo <= DateTime.Now.AddMinutes(5));
+        }
+
+        [Test]
+        public void Test15MinsLock()
+        {
+            DbManager.AddLock(3);
+
+            var sma = new ServiceMenuAuthorizer();
+
+            Assert.True(sma.BlockedTo > DateTime.Now.AddMinutes(14) && sma.BlockedTo <= DateTime.Now.AddMinutes(15));
+        }
+
+        [Test]
+        public void Test30MinsLock()
+        {
+            DbManager.AddLock(4);
+
+            var sma = new ServiceMenuAuthorizer();
+
+            Assert.True(sma.BlockedTo > DateTime.Now.AddMinutes(29) && sma.BlockedTo <= DateTime.Now.AddMinutes(30));
+        }
+
+        [Test]
+        public void Test60MinsLock()
+        {
+            DbManager.AddLock(5);
+
+            var sma = new ServiceMenuAuthorizer();
+
+            Assert.True(sma.BlockedTo > DateTime.Now.AddMinutes(59) && sma.BlockedTo <= DateTime.Now.AddMinutes(60));
         }
     }
 }

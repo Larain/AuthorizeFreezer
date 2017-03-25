@@ -73,32 +73,23 @@ namespace AuthorizeLocker.Authorizer {
         {
             get
             {
-                var cashedUnlocker = Unlocker;
+                var cachedUnlocker = Unlocker;
+                var cachedLocker = Locker;
 
-                if (cashedUnlocker != null)
-                {
-                    if (cashedUnlocker.IsActive)
-                        return GetFailedAttempts(cashedUnlocker.TimeOccurred);
-                }
-
-                var cashedLocker = Locker;
-
-                if (cashedLocker != null)
-                {
-                    if (cashedLocker.IsActive)
-                        return GetFailedAttempts(cashedLocker.TimeOccurred);
-                }
+                if (cachedUnlocker != null && cachedUnlocker.IsActive ||
+                    cachedLocker != null && cachedLocker.IsActive)
+                    return 0;
 
                 // If there are non-active lock and unlock event
                 // we have to choose which of them is more fresh
-                if (cashedLocker != null && cashedUnlocker != null)
+                if (cachedLocker != null && cachedUnlocker != null)
                 {
-                    return GetFailedAttempts(cashedLocker.TimeOccurred >= cashedUnlocker.TimeOccurred
-                        ? cashedLocker.TimeOccurred
-                        : cashedUnlocker.TimeOccurred);
+                    return GetFailedAttempts(cachedLocker.TimeOccurred >= cachedUnlocker.TimeOccurred
+                        ? cachedLocker.TimeOccurred
+                        : cachedUnlocker.TimeOccurred);
                 }
 
-                return GetFailedAttempts(cashedLocker?.TimeOccurred ?? LookFrom);
+                return GetFailedAttempts(cachedLocker?.TimeOccurred ?? LookFrom);
             }
         }
 
