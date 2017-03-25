@@ -7,6 +7,8 @@ namespace AuthorizeLocker.DBLayer
     public class MemoryDataBase
     {
         private static MemoryDataBase _instance;
+        private static readonly object Locker = new object();
+
         private MemoryDataBase()
         {
             UsersStorage = new List<User>();
@@ -17,7 +19,22 @@ namespace AuthorizeLocker.DBLayer
             GenerateUsers();
         }
 
-        public static MemoryDataBase Instance => _instance ?? (_instance = new MemoryDataBase());
+        public static MemoryDataBase Instance
+        {
+            get
+            {
+                if (_instance == null)
+                {
+                    lock (Locker)
+                    {
+                        if (_instance == null)
+                            _instance = new MemoryDataBase();
+                    }
+                }
+
+                return _instance;
+            }
+        }
 
         public List<User> UsersStorage { get; }
         public List<ILock> LocksStorage { get; }
