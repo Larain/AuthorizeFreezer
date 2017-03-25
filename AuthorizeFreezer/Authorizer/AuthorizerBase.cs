@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Threading;
 using System.Timers;
 using AuthorizeLocker.Interfaces;
+using Timer = System.Timers.Timer;
 
 namespace AuthorizeLocker.Authorizer {
     public abstract class AuthorizerBase : IAuthorizer {
@@ -126,6 +128,7 @@ namespace AuthorizeLocker.Authorizer {
         /// <param name="action">Delegate to check inputed creadentials</param>
         /// <returns></returns>
         public bool Login(Func<bool> action) {
+            Thread.Sleep(1);
             if (action == null) {
                 throw new NullReferenceException("Authorize error: Login action is not set");
             }
