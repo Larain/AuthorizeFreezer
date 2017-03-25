@@ -9,13 +9,12 @@ namespace AuthorizeLocker.Authorizer {
         private Timer _timer;
         private bool _isBlocked;
 
-        public event EventHandler LockStarted;
-        public event EventHandler LockReleased;
-
         protected AuthorizerBase() {
             ProcessBolcking();
         }
 
+        public event EventHandler LockStarted;
+        public event EventHandler LockReleased;
 
         #region Abstract Methods
 
