@@ -2,7 +2,8 @@
 using AuthorizeLocker.Interfaces;
 
 namespace AuthorizeLocker.Authorizer.ServiceMenu {
-    public class ServiceMenuUnlocker : IUnlock {
+    public class ServiceMenuUnlocker : IUnlock, IAuthorizeEvent
+    {
         public ServiceMenuUnlocker(DateTime timeOccurred, int duration = 0) {
             TimeOccurred = timeOccurred;
             DurationInMinutes = duration;
@@ -10,7 +11,7 @@ namespace AuthorizeLocker.Authorizer.ServiceMenu {
 
         public DateTime TimeUnlockedTo => TimeOccurred.AddMinutes(DurationInMinutes);
 
-        public bool IsActice => TimeUnlockedTo > DateTime.Now;
+        public bool IsActive => TimeUnlockedTo > DateTime.Now;
 
         public int DurationInMinutes { get; }
         public DateTime TimeOccurred { get; }

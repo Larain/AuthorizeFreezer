@@ -8,5 +8,6 @@ namespace AuthorizeLocker.Interfaces {
         bool IsBlocked { get; }
         bool Login(Func<bool> action);
         DateTime BlockedTo { get; }
+        int FailedAttempts { get; }
     }
 }

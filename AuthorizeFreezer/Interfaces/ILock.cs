@@ -1,10 +1,8 @@
 ﻿using System;
 
 namespace AuthorizeLocker.Interfaces {
-    public interface ILock {
+    public interface ILock : IAuthorizeEvent{
         int LockNumber { get; }
-        DateTime TimeOccurred { get; }
         DateTime TimeLockedTo { get; }
-        bool IsActive { get; }
     }
 }

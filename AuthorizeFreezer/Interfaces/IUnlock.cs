@@ -1,10 +1,9 @@
 ﻿using System;
 
 namespace AuthorizeLocker.Interfaces {
-    public interface IUnlock {
-        bool IsActice { get; }
+    public interface IUnlock : IAuthorizeEvent {
         int DurationInMinutes { get; }
         DateTime TimeUnlockedTo { get; }
-        DateTime TimeOccurred { get; }
+
     }
 }

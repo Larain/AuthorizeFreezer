@@ -44,6 +44,7 @@
     <Compile Include="DBLayer\DBManager.cs" />
     <Compile Include="Entities\FailedAttempt.cs" />
     <Compile Include="Entities\User.cs" />
+    <Compile Include="Interfaces\IAuthorizeEvent.cs" />
     <Compile Include="Interfaces\IAuthorizer.cs" />
     <Compile Include="Interfaces\ILock.cs" />
     <Compile Include="Interfaces\IUnlock.cs" />
