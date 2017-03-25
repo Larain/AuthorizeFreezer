@@ -26,7 +26,7 @@ namespace AuthorizeLocker.Authorizer {
         /// <summary>
         /// Return failed authorize attempts
         /// </summary>
-        /// <param name="lookFrom">Date point from which to look for attempts</param>
+        /// <param name="lookFrom">The time point to search attempts from</param>
         /// <returns></returns>
         protected abstract int GetFailedAttempts(DateTime lookFrom);
         /// <summary>
@@ -62,7 +62,7 @@ namespace AuthorizeLocker.Authorizer {
         public DateTime BlockedTo => Locker.TimeLockedTo;
 
         /// <summary>
-        /// Time point when search starts
+        /// Time point to search event from
         /// </summary>
         protected DateTime LookFrom => Unlocker?.TimeOccurred ?? DateTime.Now.AddHours(-2);
 
@@ -93,7 +93,7 @@ namespace AuthorizeLocker.Authorizer {
                 // we have to choose which of them is more fresh
                 if (cashedLocker != null && cashedUnlocker != null)
                 {
-                    GetFailedAttempts(cashedLocker.TimeOccurred >= cashedUnlocker.TimeOccurred
+                    return GetFailedAttempts(cashedLocker.TimeOccurred >= cashedUnlocker.TimeOccurred
                         ? cashedLocker.TimeOccurred
                         : cashedUnlocker.TimeOccurred);
                 }
