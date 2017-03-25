@@ -43,9 +43,9 @@ namespace AuthorizeLocker.DBLayer
 
         private void GenerateUsers()
         {
-            UsersStorage.Add(new User() {ID = 1, Login = "Admin", Password = "Secret"});
-            UsersStorage.Add(new User() {ID = 1, Login = "Lara1n", Password = "2324"});
-            UsersStorage.Add(new User() {ID = 1, Login = "User", Password = "pass"});
+            UsersStorage.Add(new User {ID = 1, Login = "Admin", Password = "Secret"});
+            UsersStorage.Add(new User {ID = 1, Login = "Lara1n", Password = "2324"});
+            UsersStorage.Add(new User {ID = 1, Login = "User", Password = "pass"});
         }
     }
 }
