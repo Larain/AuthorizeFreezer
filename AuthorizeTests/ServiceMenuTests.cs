@@ -1,5 +1,5 @@
 ﻿using System;
-using AuthorizeLocker.Authorizer.ServiceMenu;
+using AuthorizeLocker.Authorizer;
 using AuthorizeLocker.DBLayer;
 using NUnit.Framework;
 
@@ -11,7 +11,8 @@ namespace AuthorizeTests
         [SetUp]
         public void CleanDb()
         {
-            DbManager.Reset();
+            var tdbm = new TestDbManager();
+            tdbm.Reset();
         }
 
         #region IsBlocked Status Tests
@@ -19,7 +20,7 @@ namespace AuthorizeTests
         [Test]
         public void TestAtStartIsNotBlocked()
         {
-            var sma = new ServiceMenuAuthorizer();
+            var sma = new Authorizer(new DbManager());
 
             Assert.False(sma.IsBlocked);
         }
@@ -28,7 +29,7 @@ namespace AuthorizeTests
         public void Test3AttemptsIsBlocked()
         {
             Func<bool> failedLoginAttempt = () => false;
-            var sma = new ServiceMenuAuthorizer();
+            var sma = new Authorizer(new DbManager());
 
             sma.Login(failedLoginAttempt);
             sma.Login(failedLoginAttempt);
@@ -41,7 +42,7 @@ namespace AuthorizeTests
         public void Test2AttemptsIsNotBlocked()
         {
             Func<bool> failedLoginAttempt = () => false;
-            var sma = new ServiceMenuAuthorizer();
+            var sma = new Authorizer(new DbManager());
 
             sma.Login(failedLoginAttempt);
             sma.Login(failedLoginAttempt);
@@ -55,7 +56,7 @@ namespace AuthorizeTests
             Func<bool> failedLoginAttempt = () => false;
             Func<bool> successfulLoginAttempt = () => true;
 
-            var sma = new ServiceMenuAuthorizer();
+            var sma = new Authorizer(new DbManager());
 
             sma.Login(failedLoginAttempt);
             sma.Login(failedLoginAttempt);
@@ -70,7 +71,7 @@ namespace AuthorizeTests
             Func<bool> failedLoginAttempt = () => false;
             Func<bool> successfulLoginAttempt = () => true;
 
-            var sma = new ServiceMenuAuthorizer();
+            var sma = new Authorizer(new DbManager());
 
             sma.Login(failedLoginAttempt);
             sma.Login(failedLoginAttempt);
@@ -86,7 +87,7 @@ namespace AuthorizeTests
             Func<bool> failedLoginAttempt = () => false;
             Func<bool> successfulLoginAttempt = () => true;
 
-            var sma = new ServiceMenuAuthorizer();
+            var sma = new Authorizer(new DbManager());
 
             sma.Login(failedLoginAttempt);
             sma.Login(failedLoginAttempt);
@@ -102,7 +103,7 @@ namespace AuthorizeTests
             Func<bool> failedLoginAttempt = () => false;
             Func<bool> successfulLoginAttempt = () => true;
 
-            var sma = new ServiceMenuAuthorizer();
+            var sma = new Authorizer(new DbManager());
 
             sma.Login(failedLoginAttempt);
             sma.Login(failedLoginAttempt);
@@ -120,8 +121,9 @@ namespace AuthorizeTests
         public void TestWithUnlockPeriodIsNotBlocked()
         {
             Func<bool> failedLoginAttempt = () => false;
+            var dbManager = new DbManager();
 
-            var sma = new ServiceMenuAuthorizer();
+            var sma = new Authorizer(dbManager);
 
             sma.Login(failedLoginAttempt);
             sma.Login(failedLoginAttempt);
@@ -129,7 +131,7 @@ namespace AuthorizeTests
 
             Assert.True(sma.IsBlocked);
 
-            DbManager.AddUnlcok(1);
+            dbManager.CreateUnlock(1);
 
             Assert.False(sma.IsBlocked);
 
@@ -149,7 +151,7 @@ namespace AuthorizeTests
         public void Test2Attempts()
         {
             Func<bool> failedLoginAttempt = () => false;
-            var sma = new ServiceMenuAuthorizer();
+            var sma = new Authorizer(new DbManager());
 
             sma.Login(failedLoginAttempt);
             sma.Login(failedLoginAttempt);
@@ -161,7 +163,7 @@ namespace AuthorizeTests
         public void Test4Attempts()
         {
             Func<bool> failedLoginAttempt = () => false;
-            var sma = new ServiceMenuAuthorizer();
+            var sma = new Authorizer(new DbManager());
 
             sma.Login(failedLoginAttempt);
             sma.Login(failedLoginAttempt);
@@ -179,7 +181,7 @@ namespace AuthorizeTests
             Func<bool> failedLoginAttempt = () => false;
             Func<bool> successfulLoginAttempt = () => true;
 
-            var sma = new ServiceMenuAuthorizer();
+            var sma = new Authorizer(new DbManager());
 
             sma.Login(failedLoginAttempt);
             sma.Login(failedLoginAttempt);
@@ -195,9 +197,10 @@ namespace AuthorizeTests
         [Test]
         public void Test1MinsLock()
         {
-            DbManager.AddLock(1);
+            var dbManager = new DbManager();
+            dbManager.CreateLock(1);
 
-            var sma = new ServiceMenuAuthorizer();
+            var sma = new Authorizer(dbManager);
 
             Assert.True(sma.BlockedTo > DateTime.Now && sma.BlockedTo <= DateTime.Now.AddMinutes(1));
         }
@@ -205,9 +208,10 @@ namespace AuthorizeTests
         [Test]
         public void Test5MinsLock()
         {
-            DbManager.AddLock(2);
+            var dbManager = new DbManager();
+            dbManager.CreateLock(2);
 
-            var sma = new ServiceMenuAuthorizer();
+            var sma = new Authorizer(dbManager);
 
             Assert.True(sma.BlockedTo > DateTime.Now.AddMinutes(4) && sma.BlockedTo <= DateTime.Now.AddMinutes(5));
         }
@@ -215,9 +219,10 @@ namespace AuthorizeTests
         [Test]
         public void Test15MinsLock()
         {
-            DbManager.AddLock(3);
+            var dbManager = new DbManager();
+            dbManager.CreateLock(3);
 
-            var sma = new ServiceMenuAuthorizer();
+            var sma = new Authorizer(dbManager);
 
             Assert.True(sma.BlockedTo > DateTime.Now.AddMinutes(14) && sma.BlockedTo <= DateTime.Now.AddMinutes(15));
         }
@@ -225,9 +230,10 @@ namespace AuthorizeTests
         [Test]
         public void Test30MinsLock()
         {
-            DbManager.AddLock(4);
+            var dbManager = new DbManager();
+            dbManager.CreateLock(4);
 
-            var sma = new ServiceMenuAuthorizer();
+            var sma = new Authorizer(dbManager);
 
             Assert.True(sma.BlockedTo > DateTime.Now.AddMinutes(29) && sma.BlockedTo <= DateTime.Now.AddMinutes(30));
         }
@@ -235,9 +241,10 @@ namespace AuthorizeTests
         [Test]
         public void Test60MinsLock()
         {
-            DbManager.AddLock(5);
+            var dbManager = new DbManager();
+            dbManager.CreateLock(5);
 
-            var sma = new ServiceMenuAuthorizer();
+            var sma = new Authorizer(dbManager);
 
             Assert.True(sma.BlockedTo > DateTime.Now.AddMinutes(59) && sma.BlockedTo <= DateTime.Now.AddMinutes(60));
         }

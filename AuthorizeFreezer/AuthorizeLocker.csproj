@@ -40,17 +40,18 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Authorizer\AuthorizerBase.cs" />
+    <Compile Include="Authorizer\AuthorizeLocker.cs" />
     <Compile Include="DBLayer\DBManager.cs" />
+    <Compile Include="DBLayer\TestDbManager.cs" />
     <Compile Include="Entities\FailedAttempt.cs" />
     <Compile Include="Entities\User.cs" />
+    <Compile Include="Interfaces\IAuthorizeDbManager.cs" />
     <Compile Include="Interfaces\IAuthorizeEvent.cs" />
     <Compile Include="Interfaces\IAuthorizer.cs" />
     <Compile Include="Interfaces\ILock.cs" />
     <Compile Include="Interfaces\IUnlock.cs" />
     <Compile Include="DBLayer\MemoryDataBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Authorizer\ServiceMenu\ServiceMenuAuthorizer.cs" />
     <Compile Include="Authorizer\ServiceMenu\ServiceMenuLocker.cs" />
     <Compile Include="Authorizer\ServiceMenu\ServiceMenuUnlocker.cs" />
   </ItemGroup>

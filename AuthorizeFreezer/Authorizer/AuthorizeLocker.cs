@@ -5,12 +5,15 @@ using AuthorizeLocker.Interfaces;
 using Timer = System.Timers.Timer;
 
 namespace AuthorizeLocker.Authorizer {
-    public abstract class AuthorizerBase : IAuthorizer {
+    public class Authorizer : IAuthorizer {
         private const int MAX_FAILURES_AMOUNT = 3;
 
         private Timer _timer;
+        private readonly IAuthorizeDbManager _dbManager;
 
-        protected AuthorizerBase() {
+        public Authorizer(IAuthorizeDbManager dbManager)
+        {
+            _dbManager = dbManager; 
             ProcessBolcking();
         }
 
@@ -23,41 +26,57 @@ namespace AuthorizeLocker.Authorizer {
         /// </summary>
         public event EventHandler LockReleased;
 
-        #region Abstract Methods
+        #region DB Layer
 
         /// <summary>
         /// Return failed authorize attempts
         /// </summary>
         /// <param name="lookFrom">The time point to search attempts from</param>
         /// <returns></returns>
-        protected abstract int GetFailedAttempts(DateTime lookFrom);
+        protected int GetFailedAttempts(DateTime lookFrom)
+        {
+            return _dbManager.GetFailedAttempts(lookFrom);
+        }
+
         /// <summary>
         /// Get last event of unlock
         /// </summary>
-        protected abstract IUnlock Unlocker { get; }
+        protected IUnlock Unlocker => _dbManager.GetLastUnlocker();
+
         /// <summary>
         /// Get last event of lock
         /// </summary>
-        protected abstract ILock Locker { get; }
+        protected ILock Locker => _dbManager.GetLastLocker(LookFrom);
+
         /// <summary>
         /// Save failed authorize attempt
         /// </summary>
-        protected abstract void SaveAttempt();
+        protected void SaveAttempt(string binData = "")
+        {
+            _dbManager.SaveAttempt(binData);
+        }
 
         /// <summary>
         /// Create a lock for authorization
         /// </summary>
         /// <param name="number"></param>
         /// <returns>Lock sequence number</returns>
-        protected abstract void CreateLock(int number);
+        protected void CreateLock(int number)
+        {
+            _dbManager.CreateLock(number);
+        }
 
         /// <summary>
         /// Create an unlock for authorization
         /// </summary>
         /// <param name="duration">Duration of unlock in minutes</param>
-        protected abstract void CreateUnlock(int duration);
+        protected void CreateUnlock(int duration)
+        {
+            _dbManager.CreateUnlock(duration);
+        }
 
         #endregion
+
         /// <summary>
         /// Time when block ends
         /// </summary>
