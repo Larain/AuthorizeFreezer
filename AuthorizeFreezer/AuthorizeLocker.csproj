@@ -40,7 +40,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Authorizer\AuthorizeLocker.cs" />
+    <Compile Include="Authorizer\Authorizer.cs" />
     <Compile Include="DBLayer\DBManager.cs" />
     <Compile Include="DBLayer\TestDbManager.cs" />
     <Compile Include="Entities\FailedAttempt.cs" />
