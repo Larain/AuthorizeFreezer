@@ -1,6 +1,5 @@
 ﻿using System;
 using AuthorizeLocker.Authorizer;
-using AuthorizeLocker.Authorizer.ServiceMenu;
 using AuthorizeLocker.DBLayer;
 using AuthorizeLocker.Interfaces;
 

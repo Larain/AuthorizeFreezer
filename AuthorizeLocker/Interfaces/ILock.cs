@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Interfaces.Authorizer
+namespace AuthorizeLocker.Interfaces
 {
     public interface ILock : IAuthorizeEvent
     {

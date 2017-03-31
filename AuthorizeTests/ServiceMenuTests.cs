@@ -1,146 +1,150 @@
 ﻿using System;
 using AuthorizeLocker.Authorizer;
-using AuthorizeLocker.DBLayer;
+using AuthorizeLocker.Authorizer.ServiceMenu;
+using AuthorizeLocker.Interfaces;
+using Moq;
 using NUnit.Framework;
 
 namespace AuthorizeTests
 {
     [TestFixture]
-    public class ServiceMenuTests
+    public class AuthorizerTests
     {
-        [SetUp]
-        public void CleanDb()
-        {
-            var tdbm = new TestDbManager();
-            tdbm.Reset();
-        }
-
         #region IsBlocked Status Tests
 
         [Test]
-        public void TestAtStartIsNotBlocked()
+        public void AtStartIsNotBlockedTest()
         {
-            var sma = new Authorizer(new DbManager());
+            var dbMock = new Mock<IDBAuthorizeManager>();
+            var sma = new Authorizer(dbMock.Object);
 
             Assert.False(sma.IsBlocked);
         }
 
         [Test]
-        public void Test3AttemptsIsBlocked()
+        public void WithUnlockIsUnlockedTest()
         {
-            Func<bool> failedLoginAttempt = () => false;
-            var sma = new Authorizer(new DbManager());
+            var dbMock = new Mock<IDBAuthorizeManager>();
+            dbMock.Setup(m => m.GetLastUnlocker()).Returns(new ServiceMenuUnlocker(DateTime.Now, 1));
+            var sma = new Authorizer(dbMock.Object);
 
-            sma.Login(failedLoginAttempt);
-            sma.Login(failedLoginAttempt);
-            sma.Login(failedLoginAttempt);
+            Assert.True(sma.IsUnlocked);
+        }
+
+        [Test]
+        public void ActiveLockIsBlockedTest()
+        {
+            var dbMock = new Mock<IDBAuthorizeManager>();
+            dbMock.Setup(m => m.GetLastLocker()).Returns(new ServiceMenuLocker(DateTime.Now, 1));
+            var sma = new Authorizer(dbMock.Object);
 
             Assert.True(sma.IsBlocked);
         }
 
         [Test]
-        public void Test2AttemptsIsNotBlocked()
+        public void NonActiveLockIsNotBlockedTest()
         {
-            Func<bool> failedLoginAttempt = () => false;
-            var sma = new Authorizer(new DbManager());
-
-            sma.Login(failedLoginAttempt);
-            sma.Login(failedLoginAttempt);
+            var dbMock = new Mock<IDBAuthorizeManager>();
+            dbMock.Setup(m => m.GetLastLocker()).Returns(new ServiceMenuLocker(DateTime.Now.AddMinutes(-2), 1));
+            var sma = new Authorizer(dbMock.Object);
 
             Assert.False(sma.IsBlocked);
         }
 
         [Test]
-        public void Test2AttemptsWithSuccessIsNotBlocked()
+        public void OldLockAndNonActiveUnlockIsNotBlockedTest()
         {
-            Func<bool> failedLoginAttempt = () => false;
-            Func<bool> successfulLoginAttempt = () => true;
-
-            var sma = new Authorizer(new DbManager());
-
-            sma.Login(failedLoginAttempt);
-            sma.Login(failedLoginAttempt);
-            sma.Login(successfulLoginAttempt);
+            var dbMock = new Mock<IDBAuthorizeManager>();
+            dbMock.Setup(m => m.GetLastLocker()).Returns(new ServiceMenuLocker(DateTime.Now.AddMinutes(-2), 2));
+            dbMock.Setup(m => m.GetLastUnlocker()).Returns(new ServiceMenuUnlocker(DateTime.Now));
+            var sma = new Authorizer(dbMock.Object);
 
             Assert.False(sma.IsBlocked);
         }
 
         [Test]
-        public void Test3AttemptsWithSuccessIsBlocked()
+        public void NewLockAndActiveUnlockIsNotBlockedTest()
         {
-            Func<bool> failedLoginAttempt = () => false;
-            Func<bool> successfulLoginAttempt = () => true;
+            var dbMock = new Mock<IDBAuthorizeManager>();
+            dbMock.Setup(m => m.GetLastUnlocker()).Returns(new ServiceMenuUnlocker(DateTime.Now, 1));
+            dbMock.Setup(m => m.GetLastLocker()).Returns(new ServiceMenuLocker(DateTime.Now, 2));
+            var sma = new Authorizer(dbMock.Object);
 
-            var sma = new Authorizer(new DbManager());
+            Assert.False(sma.IsBlocked);
+        }
 
-            sma.Login(failedLoginAttempt);
-            sma.Login(failedLoginAttempt);
-            sma.Login(failedLoginAttempt);
-            sma.Login(successfulLoginAttempt);
+        [Test]
+        public void ThreeFailedAttemptsCreateLockIsCalledTest()
+        {
+            var dbMock = new Mock<IDBAuthorizeManager>();
+            dbMock.Setup(m => m.GetFailedAttempts(It.IsAny<DateTime>())).Returns(3);
+            new Authorizer(dbMock.Object);
+
+            dbMock.Verify(m => m.CreateLock(It.IsAny<int>()), Times.Once);
+        }
+
+        [Test]
+        public void NextLockCreatedCorrectlyTest()
+        {
+            var dbMock = new Mock<IDBAuthorizeManager>();
+            dbMock.Setup(m => m.GetLastLocker()).Returns(new ServiceMenuLocker(DateTime.Now.AddMinutes(-2), 1));
+            dbMock.Setup(m => m.GetFailedAttempts(It.IsAny<DateTime>())).Returns(3);
+            var sma = new Authorizer(dbMock.Object);
+
+            dbMock.Verify(m => m.CreateLock(It.Is<int>(l => l.Equals(2))));
+        }
+
+        // TO DO: Enhance test logic to invoke Event 
+        [Test]
+        public void OnLockEventInvokedTest()
+        {
+            var dbMock = new Mock<IDBAuthorizeManager>();
+
+            var sma = new Authorizer(dbMock.Object);
+            sma.LockStarted += SmaOnLockStarted;
+
+            var newDbMock = new Mock<IDBAuthorizeManager>();
+
+            newDbMock.Setup(m => m.GetLastLocker()).Returns(new ServiceMenuLocker(DateTime.Now, 1));
+            newDbMock.Setup(m => m.GetFailedAttempts(It.IsAny<DateTime>())).Returns(3);
+
+            sma = new Authorizer(newDbMock.Object);
 
             Assert.True(sma.IsBlocked);
         }
 
-        [Test]
-        public void TestSuccessAndFailIsNotBlocked()
+        // Is never invoked
+        private void SmaOnLockStarted(object sender, EventArgs eventArgs)
         {
-            Func<bool> failedLoginAttempt = () => false;
-            Func<bool> successfulLoginAttempt = () => true;
-
-            var sma = new Authorizer(new DbManager());
-
-            sma.Login(failedLoginAttempt);
-            sma.Login(failedLoginAttempt);
-            sma.Login(successfulLoginAttempt);
-            sma.Login(failedLoginAttempt);
-            
-            Assert.False(sma.IsBlocked);
+            Assert.Pass();
         }
 
+
         [Test]
-        public void TestSuccessAndFailIsBlocked()
-        {    
-            Func<bool> failedLoginAttempt = () => false;
+        public void SuccessAttemptCreateUnlockIsCalledTest()
+        {
+            var dbMock = new Mock<IDBAuthorizeManager>();
+            var sma = new Authorizer(dbMock.Object);
+
             Func<bool> successfulLoginAttempt = () => true;
-
-            var sma = new Authorizer(new DbManager());
-
-            sma.Login(failedLoginAttempt);
-            sma.Login(failedLoginAttempt);
 
             sma.Login(successfulLoginAttempt);
 
-            sma.Login(failedLoginAttempt);
-            sma.Login(failedLoginAttempt);
-            sma.Login(failedLoginAttempt);
-
-            Assert.True(sma.IsBlocked);
+            dbMock.Verify(m => m.CreateUnlock(It.IsAny<int>()), Times.Once);
         }
 
         [Test]
-        public void TestWithUnlockPeriodIsNotBlocked()
+        public void SuccessAttemptWithLockCreateUnlockIsNotCalledTest()
         {
-            Func<bool> failedLoginAttempt = () => false;
-            var dbManager = new DbManager();
+            var dbMock = new Mock<IDBAuthorizeManager>();
+            dbMock.Setup(m => m.GetLastLocker()).Returns(new ServiceMenuLocker(DateTime.Now, 1));
+            var sma = new Authorizer(dbMock.Object);
 
-            var sma = new Authorizer(dbManager);
+            Func<bool> successfulLoginAttempt = () => true;
 
-            sma.Login(failedLoginAttempt);
-            sma.Login(failedLoginAttempt);
-            sma.Login(failedLoginAttempt);
+            sma.Login(successfulLoginAttempt);
 
-            Assert.True(sma.IsBlocked);
-
-            dbManager.CreateUnlock(1);
-
-            Assert.False(sma.IsBlocked);
-
-            sma.Login(failedLoginAttempt);
-            sma.Login(failedLoginAttempt);
-            sma.Login(failedLoginAttempt);
-            sma.Login(failedLoginAttempt);
-
-            Assert.False(sma.IsBlocked);
+            dbMock.Verify(m => m.CreateUnlock(It.IsAny<int>()), Times.Never);
         }
 
         #endregion
@@ -148,46 +152,116 @@ namespace AuthorizeTests
         #region Attempts Tests
 
         [Test]
-        public void Test2Attempts()
+        public void SaveAttemptCalledTwoTimesTest()
         {
+            var dbMock = new Mock<IDBAuthorizeManager>();
+            var sma = new Authorizer(dbMock.Object);
+
             Func<bool> failedLoginAttempt = () => false;
-            var sma = new Authorizer(new DbManager());
 
             sma.Login(failedLoginAttempt);
             sma.Login(failedLoginAttempt);
 
-            Assert.AreEqual(2, sma.FailedAttempts);
+            dbMock.Verify(m => m.SaveAttempt(It.IsAny<string>()), Times.Exactly(2));
         }
 
         [Test]
-        public void Test4Attempts()
+        public void SaveAttemptIsNotCalledWithActiveLockTest()
         {
+            var dbMock = new Mock<IDBAuthorizeManager>();
+            dbMock.Setup(m => m.GetLastLocker()).Returns(new ServiceMenuLocker(DateTime.Now, 1));
+            var sma = new Authorizer(dbMock.Object);
+
             Func<bool> failedLoginAttempt = () => false;
-            var sma = new Authorizer(new DbManager());
 
             sma.Login(failedLoginAttempt);
             sma.Login(failedLoginAttempt);
-            sma.Login(failedLoginAttempt);
-            sma.Login(failedLoginAttempt);
-            sma.Login(failedLoginAttempt);
-            sma.Login(failedLoginAttempt);
 
-            Assert.AreEqual(0, sma.FailedAttempts);
+            dbMock.Verify(m => m.SaveAttempt(It.IsAny<string>()), Times.Never);
         }
 
         [Test]
-        public void Test2AttemptsWithSuccess()
+        public void SaveAttemptIsCalledWithNonActiveLockTest()
         {
+            var dbMock = new Mock<IDBAuthorizeManager>();
+            dbMock.Setup(m => m.GetLastLocker()).Returns(new ServiceMenuLocker(DateTime.Now.AddMinutes(-2), 1));
+            var sma = new Authorizer(dbMock.Object);
+
             Func<bool> failedLoginAttempt = () => false;
-            Func<bool> successfulLoginAttempt = () => true;
-
-            var sma = new Authorizer(new DbManager());
 
             sma.Login(failedLoginAttempt);
             sma.Login(failedLoginAttempt);
-            sma.Login(successfulLoginAttempt);
+            sma.Login(failedLoginAttempt);
 
-            Assert.AreEqual(0, sma.FailedAttempts);
+            dbMock.Verify(m => m.SaveAttempt(It.IsAny<string>()), Times.Exactly(3));
+        }
+
+        [Test]
+        public void SaveAttemptIsNotCalledWithActiveUnlockTest()
+        {
+            var dbMock = new Mock<IDBAuthorizeManager>();
+            dbMock.Setup(m => m.GetLastUnlocker()).Returns(new ServiceMenuUnlocker(DateTime.Now, 1));
+            var sma = new Authorizer(dbMock.Object);
+
+            Func<bool> failedLoginAttempt = () => false;
+
+            sma.Login(failedLoginAttempt);
+
+            dbMock.Verify(m => m.SaveAttempt(It.IsAny<string>()), Times.Never);
+        }
+
+        [Test]
+        public void SaveAttemptIsCalledWithNonActiveUnlockTest()
+        {
+            var dbMock = new Mock<IDBAuthorizeManager>();
+            dbMock.Setup(m => m.GetLastUnlocker()).Returns(new ServiceMenuUnlocker(DateTime.Now.AddMinutes(-2), 1));
+            var sma = new Authorizer(dbMock.Object);
+
+            Func<bool> failedLoginAttempt = () => false;
+
+            sma.Login(failedLoginAttempt);
+            sma.Login(failedLoginAttempt);
+            sma.Login(failedLoginAttempt);
+            sma.Login(failedLoginAttempt);
+
+            dbMock.Verify(m => m.SaveAttempt(It.IsAny<string>()), Times.Exactly(4));
+        }
+
+        [Test]
+        public void LoginWithNullActionThrowExceptionTest()
+        {
+            var dbMock = new Mock<IDBAuthorizeManager>();
+            var sma = new Authorizer(dbMock.Object);
+
+            Assert.Throws<ArgumentNullException>(() => sma.Login(null));
+        }
+
+        [Test]
+        public void LookForAttemtpsFromLastEventTest()
+        {
+            DateTime recentTime = DateTime.Now.AddMinutes(-30);
+            DateTime oldTime = DateTime.Now.AddMinutes(-35);
+
+            var dbMock = new Mock<IDBAuthorizeManager>();
+            dbMock.Setup(m => m.GetLastUnlocker()).Returns(new ServiceMenuUnlocker(recentTime, 1));
+            dbMock.Setup(m => m.GetLastLocker()).Returns(new ServiceMenuLocker(oldTime, 1));
+            new Authorizer(dbMock.Object);
+
+            dbMock.Verify(m => m.GetFailedAttempts(It.Is<DateTime>(d => d.Equals(recentTime))));
+        }
+
+        [Test]
+        public void LookForAttemtpsFromLastEvent2Test()
+        {
+            DateTime recentTime = DateTime.Now.AddMinutes(-30);
+            DateTime oldTime = DateTime.Now.AddMinutes(-35);
+
+            var dbMock = new Mock<IDBAuthorizeManager>();
+            dbMock.Setup(m => m.GetLastUnlocker()).Returns(new ServiceMenuUnlocker(oldTime, 1));
+            dbMock.Setup(m => m.GetLastLocker()).Returns(new ServiceMenuLocker(recentTime, 1));
+            new Authorizer(dbMock.Object);
+
+            dbMock.Verify(m => m.GetFailedAttempts(It.Is<DateTime>(d => d.Equals(recentTime))));
         }
 
         #endregion
@@ -197,10 +271,9 @@ namespace AuthorizeTests
         [Test]
         public void Test1MinsLock()
         {
-            var dbManager = new DbManager();
-            dbManager.CreateLock(1);
-
-            var sma = new Authorizer(dbManager);
+            var dbMock = new Mock<IDBAuthorizeManager>();
+            dbMock.Setup(m => m.GetLastLocker()).Returns(new ServiceMenuLocker(DateTime.Now, 1));
+            var sma = new Authorizer(dbMock.Object);
 
             Assert.True(sma.BlockedTo > DateTime.Now && sma.BlockedTo <= DateTime.Now.AddMinutes(1));
         }
@@ -208,10 +281,9 @@ namespace AuthorizeTests
         [Test]
         public void Test5MinsLock()
         {
-            var dbManager = new DbManager();
-            dbManager.CreateLock(2);
-
-            var sma = new Authorizer(dbManager);
+            var dbMock = new Mock<IDBAuthorizeManager>();
+            dbMock.Setup(m => m.GetLastLocker()).Returns(new ServiceMenuLocker(DateTime.Now, 2));
+            var sma = new Authorizer(dbMock.Object);
 
             Assert.True(sma.BlockedTo > DateTime.Now.AddMinutes(4) && sma.BlockedTo <= DateTime.Now.AddMinutes(5));
         }
@@ -219,10 +291,9 @@ namespace AuthorizeTests
         [Test]
         public void Test15MinsLock()
         {
-            var dbManager = new DbManager();
-            dbManager.CreateLock(3);
-
-            var sma = new Authorizer(dbManager);
+            var dbMock = new Mock<IDBAuthorizeManager>();
+            dbMock.Setup(m => m.GetLastLocker()).Returns(new ServiceMenuLocker(DateTime.Now, 3));
+            var sma = new Authorizer(dbMock.Object);
 
             Assert.True(sma.BlockedTo > DateTime.Now.AddMinutes(14) && sma.BlockedTo <= DateTime.Now.AddMinutes(15));
         }
@@ -230,10 +301,9 @@ namespace AuthorizeTests
         [Test]
         public void Test30MinsLock()
         {
-            var dbManager = new DbManager();
-            dbManager.CreateLock(4);
-
-            var sma = new Authorizer(dbManager);
+            var dbMock = new Mock<IDBAuthorizeManager>();
+            dbMock.Setup(m => m.GetLastLocker()).Returns(new ServiceMenuLocker(DateTime.Now, 4));
+            var sma = new Authorizer(dbMock.Object);
 
             Assert.True(sma.BlockedTo > DateTime.Now.AddMinutes(29) && sma.BlockedTo <= DateTime.Now.AddMinutes(30));
         }
@@ -241,15 +311,13 @@ namespace AuthorizeTests
         [Test]
         public void Test60MinsLock()
         {
-            var dbManager = new DbManager();
-            dbManager.CreateLock(5);
-
-            var sma = new Authorizer(dbManager);
+            var dbMock = new Mock<IDBAuthorizeManager>();
+            dbMock.Setup(m => m.GetLastLocker()).Returns(new ServiceMenuLocker(DateTime.Now, 5));
+            var sma = new Authorizer(dbMock.Object);
 
             Assert.True(sma.BlockedTo > DateTime.Now.AddMinutes(59) && sma.BlockedTo <= DateTime.Now.AddMinutes(60));
         }
 
         #endregion
-
     }
 }

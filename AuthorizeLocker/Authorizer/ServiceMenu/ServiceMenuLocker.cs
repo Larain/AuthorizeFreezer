@@ -1,10 +1,7 @@
 ﻿using System;
-using Interfaces.Authorizer;
-using Interfaces.DB;
-using Interfaces.Event;
-using Utilities;
+using AuthorizeLocker.Interfaces;
 
-namespace AuthorizeLocker {
+namespace AuthorizeLocker.Authorizer.ServiceMenu {
     public class ServiceMenuLocker : ILock {
         public ServiceMenuLocker(DateTime timeOccured, int lockNumber) {
             LockNumber = lockNumber;

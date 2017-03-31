@@ -1,17 +1,14 @@
 ﻿using System;
 using System.Threading;
 using System.Timers;
-using Interfaces.Authorizer;
-using Interfaces.DB;
-using log4net;
+using AuthorizeLocker.Interfaces;
 using Timer = System.Timers.Timer;
 
-namespace AuthorizeLocker
+namespace AuthorizeLocker.Authorizer
 {
     public class Authorizer : IAuthorizer
     {
         private const int MAX_FAILURES_AMOUNT = 3;
-        public static readonly ILog Logger = LogManager.GetLogger("Authorizer");
 
         private Timer _timer;
         private readonly IDBAuthorizeManager _dbManager;
@@ -140,7 +137,7 @@ namespace AuthorizeLocker
                         return false;
 
                 ILock cachedLocker = Locker;
-                if(cachedUnlocker != null && cachedLocker != null)
+                if (cachedUnlocker != null && cachedLocker != null)
                     if (cachedUnlocker.TimeOccurred > cachedLocker.TimeOccurred)
                         return false;
 
@@ -165,7 +162,8 @@ namespace AuthorizeLocker
         public bool Login(Func<bool> action)
         {
             Thread.Sleep(1);
-            if (action == null) {
+            if (action == null)
+            {
                 throw new ArgumentNullException("Authorize error: Login action is not set");
             }
             if (IsBlocked)
@@ -190,11 +188,11 @@ namespace AuthorizeLocker
         /// Create new Lock if needed
         /// </summary>
         /// <returns>Indicates whether the lock was created</returns>
-        private bool UpdateLocks() {
+        private bool UpdateLocks()
+        {
             ILock locker = Locker;
             if (FailedAttempts < MAX_FAILURES_AMOUNT) return false;
 
-            Logger.Info("Количество неудачных попыток авторизации превысило лимит, создаем блокировку...");
             if (locker != null)
                 CreateLock(locker.LockNumber + 1);
             else
@@ -203,22 +201,26 @@ namespace AuthorizeLocker
             return true;
         }
 
-        private void ProcessLocking() {
+        private void ProcessLocking()
+        {
             if (UpdateLocks())
                 SetTimer();
         }
 
-        private void SetTimer() {
+        private void SetTimer()
+        {
             if (Timer.Enabled) return;
-            try {
+            try
+            {
                 var interval = (Locker.TimeLockedTo - DateTime.Now).TotalMilliseconds;
-                Timer = new Timer(interval) {AutoReset = true};
+                Timer = new Timer(interval) { AutoReset = true };
                 Timer.Start();
                 OnLockStarted();
                 Timer.Elapsed += OnLockReleased;
             }
-            catch (Exception e) {
-                Logger.Error("Не удалось запустить таймер", e);
+            catch (Exception e)
+            {
+
             }
         }
 
