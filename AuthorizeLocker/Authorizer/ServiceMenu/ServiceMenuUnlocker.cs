@@ -1,10 +1,11 @@
 ﻿using System;
-using AuthorizeLocker.Interfaces;
+using Interfaces.Authorizer;
 
-namespace AuthorizeLocker.Authorizer.ServiceMenu {
+namespace AuthorizeLocker {
     public class ServiceMenuUnlocker : IUnlock
     {
-        public ServiceMenuUnlocker(DateTime timeOccurred, int duration = 0) {
+        public ServiceMenuUnlocker(DateTime timeOccurred, int duration = 0)
+        {
             TimeOccurred = timeOccurred;
             DurationInMinutes = duration;
         }

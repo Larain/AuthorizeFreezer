@@ -50,7 +50,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\AuthorizeFreezer\AuthorizeLocker.csproj">
+    <ProjectReference Include="..\AuthorizeLocker\AuthorizeLocker.csproj">
       <Project>{305da609-72c7-441b-85de-85009c6206e1}</Project>
       <Name>AuthorizeLocker</Name>
     </ProjectReference>

@@ -6,7 +6,7 @@ using AuthorizeLocker.Interfaces;
 
 namespace AuthorizeLocker.DBLayer
 {
-    public class DbManager : IAuthorizeDbManager
+    public class DbManager : IDBAuthorizeManager
     {
         private MemoryDataBase Db => MemoryDataBase.Instance;
 
@@ -15,10 +15,10 @@ namespace AuthorizeLocker.DBLayer
             return Db.AttemptsStorage.Count(a => a.TimeOccured > lookFromDate);
         }
 
-        public ILock GetLastLocker(DateTime lookFromDate)
+        public ILock GetLastLocker()
         {
             ILock result = null;
-            if (Db.LocksStorage.Any(l => l.TimeOccurred > lookFromDate))
+            if (Db.LocksStorage.Any())
                 result = Db.LocksStorage.OrderByDescending(u => u.TimeOccurred).First();
             return result;
         }
@@ -37,11 +37,12 @@ namespace AuthorizeLocker.DBLayer
         }
         public void CreateLock(int number)
         {
-            Db.LocksStorage.Add(new ServiceMenuLocker(number, DateTime.Now));
+            Db.LocksStorage.Add(new ServiceMenuLocker(DateTime.Now, number));
         }
         public void CreateUnlock(int duration)
         {
             Db.UnlocksStorage.Add(new ServiceMenuUnlocker(DateTime.Now, duration));
         }
+
     }
 }

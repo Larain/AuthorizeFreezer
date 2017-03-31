@@ -1,7 +1,9 @@
 ﻿using System;
 
-namespace AuthorizeLocker.Interfaces {
-    public interface ILock : IAuthorizeEvent{
+namespace Interfaces.Authorizer
+{
+    public interface ILock : IAuthorizeEvent
+    {
         int LockNumber { get; }
         DateTime TimeLockedTo { get; }
     }

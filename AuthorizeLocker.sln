@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuthorizeLocker", "AuthorizeFreezer\AuthorizeLocker.csproj", "{305DA609-72C7-441B-85DE-85009C6206E1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuthorizeLocker", "AuthorizeLocker\AuthorizeLocker.csproj", "{305DA609-72C7-441B-85DE-85009C6206E1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client", "Client\Client.csproj", "{73D0EBA2-112F-4EB6-B6A5-C202A82D10BA}"
 EndProject
