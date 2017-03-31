@@ -4,14 +4,19 @@ using System.Timers;
 using AuthorizeLocker.Interfaces;
 using Timer = System.Timers.Timer;
 
-namespace AuthorizeLocker.Authorizer {
-    public abstract class AuthorizerBase : IAuthorizer {
+namespace AuthorizeLocker.Authorizer
+{
+    public class Authorizer : IAuthorizer
+    {
         private const int MAX_FAILURES_AMOUNT = 3;
 
         private Timer _timer;
+        private readonly IDBAuthorizeManager _dbManager;
 
-        protected AuthorizerBase() {
-            ProcessBolcking();
+        public Authorizer(IDBAuthorizeManager dbManager)
+        {
+            _dbManager = dbManager;
+            ProcessLocking();
         }
 
         /// <summary>
@@ -23,45 +28,70 @@ namespace AuthorizeLocker.Authorizer {
         /// </summary>
         public event EventHandler LockReleased;
 
-        #region Abstract Methods
+        #region DB Layer
 
         /// <summary>
         /// Return failed authorize attempts
         /// </summary>
         /// <param name="lookFrom">The time point to search attempts from</param>
         /// <returns></returns>
-        protected abstract int GetFailedAttempts(DateTime lookFrom);
+        protected int GetFailedAttempts(DateTime lookFrom)
+        {
+            return _dbManager.GetFailedAttempts(lookFrom);
+        }
+
         /// <summary>
         /// Get last event of unlock
         /// </summary>
-        protected abstract IUnlock Unlocker { get; }
+        protected IUnlock Unlocker => _dbManager.GetLastUnlocker();
+
         /// <summary>
         /// Get last event of lock
         /// </summary>
-        protected abstract ILock Locker { get; }
+        protected ILock Locker => _dbManager.GetLastLocker();
+
         /// <summary>
         /// Save failed authorize attempt
         /// </summary>
-        protected abstract void SaveAttempt();
+        protected void SaveAttempt(string binData = "")
+        {
+            _dbManager.SaveAttempt(binData);
+        }
 
         /// <summary>
         /// Create a lock for authorization
         /// </summary>
         /// <param name="number"></param>
         /// <returns>Lock sequence number</returns>
-        protected abstract void CreateLock(int number);
+        protected void CreateLock(int number)
+        {
+            _dbManager.CreateLock(number);
+        }
 
         /// <summary>
         /// Create an unlock for authorization
         /// </summary>
         /// <param name="duration">Duration of unlock in minutes</param>
-        protected abstract void CreateUnlock(int duration);
+        protected void CreateUnlock(int duration)
+        {
+            _dbManager.CreateUnlock(duration);
+        }
 
         #endregion
+
         /// <summary>
         /// Time when block ends
         /// </summary>
-        public DateTime BlockedTo => Locker.TimeLockedTo;
+        public DateTime BlockedTo => Locker?.TimeLockedTo ?? new DateTime();
+
+        /// <summary>
+        /// Is any active unlock
+        /// </summary>
+        public bool IsUnlocked => Unlocker != null && Unlocker.IsActive;
+        /// <summary>
+        /// Is any active lock
+        /// </summary>
+        protected bool IsLocked => Locker != null && Locker.IsActive;
 
         /// <summary>
         /// Time point to search event from
@@ -75,11 +105,10 @@ namespace AuthorizeLocker.Authorizer {
         {
             get
             {
-                var cachedUnlocker = Unlocker;
-                var cachedLocker = Locker;
+                IUnlock cachedUnlocker = Unlocker;
+                ILock cachedLocker = Locker;
 
-                if (cachedUnlocker != null && cachedUnlocker.IsActive ||
-                    cachedLocker != null && cachedLocker.IsActive)
+                if (IsUnlocked || IsLocked)
                     return 0;
 
                 // If there are non-active lock and unlock event
@@ -98,26 +127,29 @@ namespace AuthorizeLocker.Authorizer {
         /// <summary>
         /// Indicator is authorization blocked
         /// </summary>
-        public bool IsBlocked {
-            get {
-                var ublocker = Unlocker;
-                if (ublocker != null)
-                    if (ublocker.IsActive)
+        public bool IsBlocked
+        {
+            get
+            {
+                IUnlock cachedUnlocker = Unlocker;
+                if (cachedUnlocker != null)
+                    if (cachedUnlocker.IsActive)
                         return false;
 
-                var locker = Locker;
-                if (locker != null)
-                    if (locker.IsActive)
-                        return true;
+                ILock cachedLocker = Locker;
+                if (cachedUnlocker != null && cachedLocker != null)
+                    if (cachedUnlocker.TimeOccurred > cachedLocker.TimeOccurred)
+                        return false;
 
-                return false;
+                return cachedLocker != null && cachedLocker.IsActive;
             }
         }
 
         /// <summary>
         /// Timer for lock period
         /// </summary>
-        private Timer Timer {
+        private Timer Timer
+        {
             get { return _timer ?? (_timer = new Timer()); }
             set { _timer = value; }
         }
@@ -127,54 +159,78 @@ namespace AuthorizeLocker.Authorizer {
         /// </summary>
         /// <param name="action">Delegate to check inputed creadentials</param>
         /// <returns></returns>
-        public bool Login(Func<bool> action) {
+        public bool Login(Func<bool> action)
+        {
             Thread.Sleep(1);
-            if (action == null) {
-                throw new NullReferenceException("Authorize error: Login action is not set");
+            if (action == null)
+            {
+                throw new ArgumentNullException("Authorize error: Login action is not set");
             }
             if (IsBlocked)
                 return false;
             var isAutenticated = action.Invoke();
-            if (isAutenticated) {
+            if (isAutenticated)
+            {
                 CreateUnlock(0);
                 return true;
             }
 
-            var unlocker = Unlocker;
+            IUnlock unlocker = Unlocker;
             if (unlocker != null)
                 if (unlocker.IsActive)
                     return false;
             SaveAttempt();
-            ProcessBolcking();
+            ProcessLocking();
             return false;
         }
 
-        private bool ProcessBolcking() {
-            var locker = Locker;
-            if (FailedAttempts >= MAX_FAILURES_AMOUNT) {
-                if (locker != null)
-                    CreateLock(locker.LockNumber + 1);
-                else
-                    CreateLock(1); // 1 - the first element of sequence
+        /// <summary>
+        /// Create new Lock if needed
+        /// </summary>
+        /// <returns>Indicates whether the lock was created</returns>
+        private bool UpdateLocks()
+        {
+            ILock locker = Locker;
+            if (FailedAttempts < MAX_FAILURES_AMOUNT) return false;
 
-                OnIsBlockedChanged();
+            if (locker != null)
+                CreateLock(locker.LockNumber + 1);
+            else
+                CreateLock(1); // 1 - the first element of sequence
 
+            return true;
+        }
+
+        private void ProcessLocking()
+        {
+            if (UpdateLocks())
+                SetTimer();
+        }
+
+        private void SetTimer()
+        {
+            if (Timer.Enabled) return;
+            try
+            {
                 var interval = (Locker.TimeLockedTo - DateTime.Now).TotalMilliseconds;
-                Timer = new Timer(interval) {AutoReset = true};
+                Timer = new Timer(interval) { AutoReset = true };
                 Timer.Start();
-                Timer.Elapsed += TimerOnElapsed;
-
-                return true;
+                OnLockStarted();
+                Timer.Elapsed += OnLockReleased;
             }
-            return false;
+            catch (Exception e)
+            {
+
+            }
         }
 
-        private void TimerOnElapsed(object sender, ElapsedEventArgs elapsedEventArgs)
+        private void OnLockReleased(object sender, ElapsedEventArgs elapsedEventArgs)
         {
             LockReleased?.Invoke(this, EventArgs.Empty);
         }
 
-        private void OnIsBlockedChanged() {
+        private void OnLockStarted()
+        {
             LockStarted?.Invoke(this, EventArgs.Empty);
         }
     }

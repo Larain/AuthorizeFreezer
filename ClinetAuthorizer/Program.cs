@@ -1,5 +1,5 @@
 ﻿using System;
-using AuthorizeLocker.Authorizer.ServiceMenu;
+using AuthorizeLocker.Authorizer;
 using AuthorizeLocker.DBLayer;
 using AuthorizeLocker.Interfaces;
 
@@ -9,11 +9,12 @@ namespace ClinetAuthorizer
     {
         private static string _login;
         private static string _password;
+        private static readonly TestDbManager DbManager = new TestDbManager();
 
         static void Main(string[] args)
         {
             bool again = true;
-            IAuthorizer authorizer = new ServiceMenuAuthorizer();
+            IAuthorizer authorizer = new Authorizer(new DbManager());
 
             authorizer.LockStarted += AuthorizerOnLockStarted;
             authorizer.LockReleased += AuthorizerOnLockReleased;

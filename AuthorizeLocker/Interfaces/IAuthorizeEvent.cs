@@ -1,7 +1,6 @@
 ﻿using System;
 
-namespace AuthorizeLocker.Interfaces
-{
+namespace AuthorizeLocker.Interfaces {
     public interface IAuthorizeEvent
     {
         bool IsActive { get; }

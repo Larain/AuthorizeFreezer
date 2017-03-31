@@ -4,7 +4,8 @@ using AuthorizeLocker.Interfaces;
 namespace AuthorizeLocker.Authorizer.ServiceMenu {
     public class ServiceMenuUnlocker : IUnlock
     {
-        public ServiceMenuUnlocker(DateTime timeOccurred, int duration = 0) {
+        public ServiceMenuUnlocker(DateTime timeOccurred, int duration = 0)
+        {
             TimeOccurred = timeOccurred;
             DurationInMinutes = duration;
         }

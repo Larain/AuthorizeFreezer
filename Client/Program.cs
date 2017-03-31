@@ -8,6 +8,7 @@ namespace Client
         static void Main(string[] args)
         {
             bool again = true;
+            var dbManager = new TestDbManager();
 
             while (again)
             {
@@ -21,7 +22,7 @@ namespace Client
                 Console.WriteLine();
 
                 Console.WriteLine("Cheking your credentials...");
-                if (DbManager.Login(login, password))
+                if (dbManager.Login(login, password))
                 {
                     var oldVal = Console.ForegroundColor;
 

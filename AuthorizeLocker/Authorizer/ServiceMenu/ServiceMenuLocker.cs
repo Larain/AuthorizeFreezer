@@ -3,7 +3,7 @@ using AuthorizeLocker.Interfaces;
 
 namespace AuthorizeLocker.Authorizer.ServiceMenu {
     public class ServiceMenuLocker : ILock {
-        public ServiceMenuLocker(int lockNumber, DateTime timeOccured) {
+        public ServiceMenuLocker(DateTime timeOccured, int lockNumber) {
             LockNumber = lockNumber;
             TimeOccurred = timeOccured;
         }
